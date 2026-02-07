@@ -67,7 +67,9 @@ with open(output_file, 'w', encoding='utf-8') as f:
     row = [trans['age']]
     for item in sorted_items:
       if item in trans['items']:
-        row.append("True" if item in trans['items'] else "False")
+        row.append("True")
+      else:
+        row.append("False")
     f.write(",".join(row) + "\n")
 
 print(f"Success! {output_file} created with {len(sorted_items)} unique products.")
