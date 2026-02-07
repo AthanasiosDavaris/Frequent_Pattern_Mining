@@ -1,2 +1,4 @@
 *.arff
 *.pdf
+*.odt
+/Screenshots

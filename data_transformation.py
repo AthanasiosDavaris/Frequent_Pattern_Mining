@@ -1,75 +1,45 @@
 import collections
 
-# Mapping dictionary for transliteration
-translation_map = {
-  'γύρο_χοιρινό': 'Gyros_Pork',
-  'γύρο_κοτόπουλο': 'Gyros_Chicken',
-  'κοτομπέικον': 'Kotobeikon',
-  'χωριάτικη': 'Choriatiki_Salad',
-  'σαγανάκι': 'Saganaki',
-  'ψωμί_λευκό': 'Bread_White',
-  'ψωμί_μαύρο': 'Bread_Brown',
-  'ψωμί_πολύσπορο': 'Bread_Multigrain',
-  'αναψυκτικό': 'Soda',
-  'φρουτοσαλάτα': 'Fruit_Salad',
-  'πατάτες': 'Fries',
-  'παγωτό': 'Ice_Cream',
-  'χυμός': 'Juice',
-  'καίσαρα': 'Caesar_Salad',
-  'αγγουροντομάτα': 'Cucumber_Tomato_Salad',
-  'μαρούλι': 'Lettuce_Salad',
-  'τυροκροκέτες': 'Cheese_Croquettes',
-  'μπιφτέκι_λαχανικών': 'Veggie_Burger',
-  'γιαούρτι-μέλι': 'Yogurt_Honey',
-  'μπύρα': 'Beer',
-  'νερό': 'Water',
-  'μιλκσέικ': 'Milkshake',
-  'καλαμάρι': 'Calamari',
-  'κοτομπουκιές': 'Chicken_Nuggets'
+groups = {
+  'Main_Dish': ['γύρο_χοιρινό', 'γύρο_κοτόπουλο', 'μπιφτέκι_λαχανικών', 'καλαμάρι', 'κοτομπέικον', 'κοτομπουκιές'],
+  'Side_Dish': ['πατάτες', 'σαγανάκι', 'τυροκροκέτες'],
+  'Bread': ['ψωμί_λευκό', 'ψωμί_μαύρο', 'ψωμί_πολύσπορο'],
+  'Salad': ['χωριάτικη', 'καίσαρα', 'αγγουροντομάτα', 'μαρούλι'],
+  'Drink': ['αναψυκτικό', 'μπύρα', 'νερό', 'χυμός', 'μιλκσέικ'],
+  'Dessert': ['παγωτό', 'γιαούρτι-μέλι', 'φρουτοσαλάτα']
 }
 
 input_file = 'orders.txt'
-output_file = 'orders_latin.arff'
+output_file = 'orders_grouped.arff'
 
 # Read and process
 with open(input_file, 'r', encoding='utf-8') as f:
   lines = [line.strip() for line in f if line.strip()]
 
 transactions = []
-all_latin_items = set()
 
 for line in lines:
   parts = line.split(',')
   age = parts[1]
-  greek_items = parts[2:]
+  items = parts[2:]
+  transactions.append({'age': age, 'items': items})
 
-  latin_items = set()
-  for item in greek_items:
-    latin_name = translation_map.get(item, item)
-    latin_items.add(latin_name)
-    all_latin_items.add(latin_name)
-  
-  transactions.append({'age': age, 'items': latin_items})
-
-sorted_items = sorted(list(all_latin_items))
-
-# Write the ARFF file
 with open(output_file, 'w', encoding='utf-8') as f:
-  f.write("@RELATION psistiri_orders\n\n")
+  f.write("@RELATION psistiri_grouped\n\n")
+
   f.write("@ATTRIBUTE age NUMERIC\n")
 
-  for item in sorted_items:
-    f.write(f"@ATTRIBUTE {item} {{True, False}}\n")
+  for group_name in groups.keys():
+    f.write(f"@ATTRIBUTE {group_name} {{True, False}}\n")
   
   f.write("\n@DATA\n")
 
   for trans in transactions:
     row = [trans['age']]
-    for item in sorted_items:
-      if item in trans['items']:
-        row.append("True")
-      else:
-        row.append("False")
+    for group_name, items_in_group in groups.items():
+      has_item_from_group = any(item in trans['items'] for item in items_in_group)
+      row.append("True" if has_item_from_group else "False")
+    
     f.write(",".join(row) + "\n")
 
-print(f"Success! {output_file} created with {len(sorted_items)} unique products.")
+print(f"Success! Created {output_file} with grouped categories.")
